@@ -1758,10 +1758,13 @@ namespace test
 
         private void btn1_Click(object sender, EventArgs e)
         {
+            int _a = 1;
+            int _b = 2;
             int abc(int a,int b)
             {
                 return a + b;
             }
+            abc(_a, _b);
             #region 设计模式
             #region 状态模式实现
 
