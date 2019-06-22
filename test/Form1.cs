@@ -11,6 +11,10 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using System.Net.Http;
 using CallBackExampleTwo;
+using System.Data.SqlClient;
+using test.Factory.AbstractFactory;
+using System.DirectoryServices.ActiveDirectory;
+using System.Text.RegularExpressions;
 
 namespace test
 {
@@ -40,32 +44,16 @@ namespace test
     #endregion
 
     #region 反射案例类
-    ////放在最外面是因为用反射来对类进行实例化时，获取值必须是命名空间.类名，所以，只能放在命名空间往下一层开头的地方
-    ////使用接口封装方法
-    ////不直接实例化类，通过获取程序集中的类来进行实例化应用
-    //interface INInstance
-    //{
-    //    void A1();
-    //    void B1();
-    //}
-
-    //public class A : INInstance
-    //{
-    //    public string MyProperty { get; set; }
-    //    public void Function(string a) { MessageBox.Show(a); }
-    //    public void A1() { MessageBox.Show("A.A"); }
-    //    public void B1() { MessageBox.Show("A.B"); }
-    //}
-
-    //public class B : INInstance
-    //{
-    //    public string MyProperty { get; set; }
-
-    //    public void Function(string a) { MessageBox.Show(a); }
-
-    //    public void A1() { MessageBox.Show("B.A"); }
-    //    public void B1() { MessageBox.Show("B.B"); }
-    //}
+    //放在最外面是因为用反射来对类进行实例化时，获取值必须是命名空间.类名，所以，只能放在命名空间往下一层开头的地方
+    //使用接口封装方法
+    //不直接实例化类，通过获取程序集中的类来进行实例化应用
+    public class ReflectA
+    {
+        public string MyProperty { get; set; }
+        public void Function(string a) { MessageBox.Show(a); }
+        public void A1() { MessageBox.Show("A.A"); }
+        public void B1() { MessageBox.Show("A.B"); }
+    }
     #endregion
     public partial class Form1 : Form
     {
@@ -217,8 +205,6 @@ namespace test
         #endregion
         public void InitData()  //数组
         {
-
-
             #region 我的弱智写法
             //int[] c = new int[] { 1, 2, 3 }; 
             //int[,] b = new int[3, 3];
@@ -252,6 +238,7 @@ namespace test
             //    MessageBox.Show(ex.Message);                                                      
             //}          
             #endregion
+
             #region 多维数组
             //                                                                                      { 0, 0 }
             //                                                                                      { 1, 2 }
@@ -282,8 +269,6 @@ namespace test
             //{3,6,5,4,2}
             //{4,8,9}
             #endregion
-
-
         }
         #region 传递数组值给函数（方法）
         public double GetAvg(int[] z, int size)
@@ -392,7 +377,7 @@ namespace test
         class A
         {
             [Required]
-            public string Myproperty { get; set; }
+            public string MyProperty { get; set; }
 
             public void Fcuntion(int a) { MessageBox.Show(a.ToString()); }
         }
@@ -414,9 +399,13 @@ namespace test
 
                 foreach (var property in properties)
                 {
+                    //利用反射，获取到应用了RequiredAttribute的属性，返回值为一个object数组
+                    //获取该属性的特性，由于单个对象可以有多个特性，此处需要指定获取哪个特性，也就是方法的第一个参数
                     var attributes = property.GetCustomAttributes(typeof(RequiredAttribute), false);
+                    //判断该object数组是否有值，有值证明该属性应用了该特性，没有值则为没有应用该特性
                     if (attributes.Length > 0)
                     {
+                        //利用反射，获取指定属性的值（obj为类的type），获取到后判断其是否为空，为空则证明该属性没有赋值，直接返回false
                         if (property.GetValue(obj) == null)
                         {
                             return false;
@@ -432,6 +421,7 @@ namespace test
 
         #region 委托、Lambda和订阅发布模式
         #region 委托，匿名函数
+        //委托是一种封装方法的特殊类型，事件是特殊形式的委托，用于实现对相关部件的通知，Func和Action是C#的两个特殊类型，使我们能够方便的使用委托，匿名方法和Lambda表达式是C#的两个特性，让我们不必定义方法就可以使用委托
         //委托是用来解决无法封装重复性高的方法中的变化点，引入委托也叫匿名函数
         //第一步 声明委托类型
         //第二步 修改形参列表
@@ -439,14 +429,67 @@ namespace test
         //理解：委托用来封闭函数，使用delegate关键字其后为数字签名，数字签名为 方法的类型和形参；
         //      声明完后，在需要封闭的函数内将该委托定义为一个形参，同时在需要使用函数才能封闭的点使用；
         //      然后在声明委托之后的位置对委托进行赋值，然后使用定义的名字去调用该委托；
+        #region 委托进行回调使用
+        //使用委托进行回调，回调：在一个对象中发生某件事情时通知另一个对象
+        //定义两个类，第一个类用来创建委托字段并使用构造方法初始化该委托字段
+        //然后创建一个方法，用来计算值和回调值，在其中完成计算后，将值都赋给第二个类中的方法
+        //第二个类，创建一个方法签名与委托相同的方法，使用该方法来实例化委托用来显示值
+        //实际使用：实例化第一个类，初始化的委托方法为第二个类中的显示方法，调用第一个类中的计算方法来进行计算
+        //此时，调用的委托已经定义为第二个类中的方法，那么在第一个类方法中调用的委托方法就被实例化为了第二个类中的方法
+        //分离了委托的计算和输出方法，并且可以往第一个委托中添加任意方法签名相同的方法来进行调用
+        // 委托字义
+        //delegate void NotifyCalculation(int x, int y, int result);
 
+        //class Calculator
+        //{
+        //    // 委托字段
+        //    NotifyCalculation calcListener;
+
+        //    // 构造器，用参数给委托字段赋值（委托实例化） — 译者注
+        //    public Calculator(NotifyCalculation listener)  //此处的初始化参数可以为任意方法签名与委托相同的方法
+        //    {
+        //        calcListener = listener;
+        //    }
+
+        //    // 方法，计算两数乘积，在其中通过委托向另一对象发送通知 — 译者注
+        //    public int CalculateProduct(int num1, int num2)
+        //    {
+        //        // perform the calculation
+        //        // 执行计算
+        //        int result = num1 * num2;
+
+        //        // notify the delegate that we have performed a calc
+        //        // 向委托发送通知，说明已经执行了一个计算
+        //        calcListener(num1, num2, result);
+
+        //        // return the result
+        //        // 返回结果
+        //        return result;
+        //    }
+        //}
+
+        //// 接收通知的类 — 译者注
+        //class CalculationListener
+        //{
+        //    // 与委托的方法签名对应的方法。
+        //    // 注意，这是一个静态方法，因此不需要在这个类中创建委托字段并实例化，
+        //    // 可以直接通过类名返回该方法的一个实例，如Calculation.CalculationPrinter — 译者注
+        //    public static void CalculationPrinter(int x, int y, int result)
+        //    {
+        //        Console.WriteLine("Calculation Notification: {0} x {1} = {2}",
+        //                        x, y, result);
+        //    }
+        //}
+
+        #endregion
+
+        #region 委托放入方法中使用
         //对一个数进行比较，也就是传一个参数就行了
         delegate bool Function(int num);  //第一步
-
-        static Function bijiao10 = delegate (int n) { return n > 10; };
+        static Function bijiao10 = delegate (int n) { return n > 10; };   //定义的委托方法
         static Function isEven = delegate (int n) { return n % 2 == 0; };
 
-        static List<int> Traverse(List<int> nums, Function function)  //第二步
+        static List<int> Traverse(List<int> nums, Function function)  //第二步，定义一个方法，将委托方法作为参数传递
         {
             var list = new List<int>();
             foreach (var num in nums)
@@ -475,8 +518,7 @@ namespace test
         //static FunctionMax MaxValue = delegate (int maxValue, int max) { return maxValue > max; };
         //static FunctionMax MinValue = delegate (int maxValue, int max) { return maxValue < max; };
 
-
-        static int MaxMinValue(List<int> nums, Func<int, int, bool> functionMax)   //这处可以直接使用系统自带的泛型委托Func<>
+        static int MaxMinValue(List<int> nums, Func<int, int, bool> functionMax)   //这处可以直接使用系统自带的泛型委托Func<>，该委托可以写16个参数和一个返回类型参数，返回类型参数要写在最后一个
         {
             int max = nums[0];
             var list = new List<int>();
@@ -490,11 +532,91 @@ namespace test
             return max;
         }
 
-        static void GetFullInfo(string yourname, Action<string> action)    //系统自带的泛型委托Action<>
+        static void GetFullInfo(string yourname, Action<string> action)    //系统自带的泛型委托Action<>,无返回值的委托，可以有16个参数，将输出其中的参数
         {
             string firstStr = "Welcome to cnblogs ";
             action(firstStr + yourname);
         }
+        #endregion
+
+        #region 多播委托的使用
+        //基于一对多的方法，当触发某件事时同时实现多个方法就可以使用多播委托
+        //例如：把一国文字翻译成多个国家的文字。于是可以把英-汉、英-日、英-俄、英-德等多个翻译方法组合成一个委托多播，然后通过一次性委托调用得到全部翻译结果
+        //多播委托：只要委托的签名（类型和形参）相同，在此基础上那么各个委托之间可以像一个list一样去进行 "+" "-" "+=" "-="；     
+        static Action<int> all;
+
+        static Action<int> print = i => MessageBox.Show(i.ToString());
+
+        static Action<int> AddThenPrint = i => { i++; MessageBox.Show(i.ToString()); };
+
+        //all = AddThenPrint + print;  all(2);  输出  3  2
+
+
+        //实例
+        // 委托定义
+        //delegate void NotifyCalculation(int x, int y, int result);
+
+        //class Calculator
+        //{
+        //    // 委托字段
+        //    NotifyCalculation calcListener;
+
+        //    // 方法，增加委托
+        //    public void AddListener(NotifyCalculation listener)
+        //    {
+        //        calcListener += listener;
+        //    }
+        //    // 方法，去除委托
+        //    public void RemoveListener(NotifyCalculation listener)
+        //    {
+        //        calcListener -= listener;
+        //    }
+        //    // 方法，执行乘积计算
+        //    public int CalculateProduct(int num1, int num2)
+        //    {
+        //        // perform the calculation
+        //        // 执行计算
+        //        int result = num1 * num2;
+
+        //        // notify the delegate that we have performed a calc
+        //        // 通知委托，告知已执行了一个计算
+        //        calcListener(num1, num2, result);
+
+        //        // return the result
+        //        // 返回结果
+        //        return result;
+        //    }
+        //}
+        //// 侦听器类：回调的委托方法，可以写多个，只要方法签名和委托相同就可以作为委托方法
+        //class CalculationListener
+        //{
+        //    // 字段，表示侦听器id
+        //    private string idString;
+
+        //    // 构造器，设置侦听器id
+        //    public CalculationListener(string id)
+        //    {
+        //        idString = id;
+        //    }
+
+        //    // 与委托签名对应的方法，调用委托时将执行此方法
+        //    public void CalculationPrinter(int x, int y, int result)
+        //    {
+        //        Console.WriteLine("{0}: Notification: {1} x {2} = {3}",
+        //                    idString, x, y, result);
+        //    }
+        //}
+
+        //// 另一个侦听器类
+        //class AlternateListener
+        //{
+        //    public static void CalculationCallback(int x, int y, int result)
+        //    {
+        //        Console.WriteLine("Callback: {0} x {1} = {2}",
+        //                    x, y, result);
+        //    }
+        //}
+        #endregion
         #endregion
 
         #region 订阅发布模式没看懂版
@@ -641,15 +763,7 @@ namespace test
 
         #endregion
 
-        ////多播委托：只要委托的签名（类型和形参）相同，在此基础上那么各个委托之间可以像一个list一样去进行 "+" "-" "+=" "-="；
-        ////all = AddThenPrint + print;  all(2);  输出  3  2
-        //static Action<int> all;
-
-        //static Action<int> print = i => MessageBox.Show(i.ToString());
-
-        //static Action<int> AddThenPrint = i => { i++; MessageBox.Show(i.ToString()); };
-
-        //#region 报社-订阅发布设计模式
+        #region 报社-订阅发布设计模式
         ////interface INewspaper
         ////{
         ////     void SetNewspaper(Newspaper newspaper);
@@ -747,6 +861,7 @@ namespace test
         //    public string Title { get; set; }  //标题
         //    public string Content { get; set; }   //内容
         //}
+        #endregion
         #endregion
 
         #region 接口、泛型、递归和异常
@@ -1032,7 +1147,7 @@ namespace test
         //}//end class Rectangle  
         //class Tabletop : Rectangle
         //{
-        //    public Tabletop(double l, double w) : base(l, w)  //子类构造函数调用父类构造函数的参数,也就是子类继承父类的构造函数参数
+        //    public Tabletop(double l, double w) : base(l, w)  //子类构造函数调用父类构造函数的参数,也就是子类继承父类的构造函数参数，不指明参数就继承父类构造函数的全部参数
         //    {
 
         //    }
@@ -1049,7 +1164,6 @@ namespace test
         //    }
         //}
         #endregion
-
 
         #region 多态类
         //public class Animal
@@ -1207,7 +1321,10 @@ namespace test
         }
         #endregion
         #endregion
-        #region 集合List  迭代器和foreach的关系
+
+        #region 集合List  迭代器和foreach的关系，yield return
+        //foreach其实就是调用实现了IEnumeable接口的对象的方法，如果是没有实现该接口的对象就无法使用foreach遍历
+        //如果没有实现，可以自己往类上添加继承接口，然后实现接口，定义GetEnumeator方法的返回值，返回值必须为数组类型，因为其实只有数组类型可以遍历
         class Enumerator   //定义的迭代器，所谓的迭代器就是一层一层的往下，不过C#已经完全封装了迭代器，无需再自定义，可以直接调用接口
         {
             public Enumerator(int[] nums)  //初始化值
@@ -1249,6 +1366,9 @@ namespace test
             {
                 foreach (var num in Nums)
                 {
+                    //yield return 可以保证每次循环遍历从前一次停止的地方开始执行
+                    //具体作用：当想获取一个实现IEnumerable的集合，而不想一次性把全部数据加载到内存而是一次一次去的执行判断，就可以使用yield return
+                    //yield return会一次一次的去加载并执行遍历，只需要找到需要的值而不是全部的值，建议使用yield return
                     yield return num;       //yield return 表示按顺序返回值
                 }
 
@@ -1274,6 +1394,42 @@ namespace test
             //}
 
 
+        }
+
+        //实现IEnumerable接口
+        class Car  //创建一个保存数据的类
+        {
+            private string type;
+            private int speed;
+            public Car(string type, int speed)
+            {
+                this.type = type;
+                this.speed = speed;
+            }
+
+            public void GetCar()
+            {
+                MessageBox.Show("车的类型为：" + type + "车的当前速度为：" + speed);
+            }
+        }
+        //创建一个实现IEnumerable接口的类
+        class Garage : IEnumerable
+        {
+            Car[] cars = new Car[4]; //创建一个Car类的数组，用来保存实例化的Car
+            public Garage()  //初始化Cars
+            {
+                cars[0] = new Car("Rusty", 30);
+                cars[1] = new Car("Clunker", 50);
+                cars[2] = new Car("Zippy", 30);
+                cars[3] = new Car("Fred", 45);
+            }
+            public IEnumerator GetEnumerator()  //实现IEnumerable接口，返回值为IEnumerator接口
+            //IEnumerator接口：迭代器就定义在该接口中，IEnumerable接口只是调用了该接口中的方法
+            {
+                //返回值必须是Array(数组)或者List(集合)
+                //其实List也是实现了IEnumerable接口的一个类  
+                return cars.GetEnumerator();
+            }
         }
         #endregion
 
@@ -1719,7 +1875,251 @@ namespace test
         }
         #endregion
 
-        #region 状态模式
+        #region 状态模式A
+        //网上找的例子，是通过一个方法去进行判断是否进行实例化另一个类
+        //用来处理多分支情况下难以维护的情况，将每一个分支视为一种状态放入一个类中
+        //例子：一个网上书店
+        class User
+        {
+            public UserLevel UserLevel { get; set; }
+            private string userName;
+            public double PaidMoney { get; private set; }
+            public User(string userName)
+            {
+                this.userName = userName;
+                this.PaidMoney = 0;
+                this.UserLevel = new NormalUser(this);
+            }
+            public void BuyBook(double amount)
+            {
+                MessageBox.Show("Hello  " + userName + ",You have paid $" + PaidMoney + ",You Level is  " + UserLevel.GetUserLvevel());
+                double realamount = UserLevel.CalcRealAmount(amount);
+                MessageBox.Show("You only paid $" + realamount + "for this book.");
+                PaidMoney += realamount;
+                UserLevel.StateCheck();
+            }
+        }
+        //抽象基类
+        abstract class UserLevel
+        {
+            protected User user;
+            protected string userLevel;
+            public UserLevel(User user)
+            {
+                this.user = user;
+            }
+            public string GetUserLvevel()
+            {
+                return userLevel;
+            }
+            public abstract void StateCheck();
+            public abstract double CalcRealAmount(double amount);
+        }
+        //钻石用户
+        class DiamondUser : UserLevel
+        {
+            public DiamondUser(User user) : base(user)
+            {
+                userLevel = "钻石用户";
+            }
+            public override double CalcRealAmount(double amount)
+            {
+                return amount * 0.7;
+            }
+            public override void StateCheck()
+            {
+
+            }
+        }
+        //黄金用户
+        class GoldUser : UserLevel
+        {
+            public GoldUser(User user) : base(user)
+            {
+                userLevel = "黄金用户";
+            }
+            public override double CalcRealAmount(double amount)
+            {
+                return amount * 0.8;
+            }
+
+            public override void StateCheck()
+            {
+                if (user.PaidMoney > 3000)
+                {
+                    user.UserLevel = new DiamondUser(user);
+                }
+            }
+        }
+        //白银用户
+        class SilverUser : UserLevel
+        {
+            public SilverUser(User user) : base(user)
+            {
+                userLevel = "白银用户";
+            }
+            public override double CalcRealAmount(double amount)
+            {
+                return amount * 0.9;
+            }
+
+            public override void StateCheck()
+            {
+                if (user.PaidMoney > 2000)
+                {
+                    user.UserLevel = new GoldUser(user);
+                }
+            }
+        }
+        //普通用户
+        class NormalUser : UserLevel
+        {
+            public NormalUser(User user) : base(user)
+            {
+                userLevel = "普通用户";
+            }
+            public override double CalcRealAmount(double amount)
+            {
+                return amount * 0.95;
+            }
+
+            public override void StateCheck()
+            {
+                if (user.PaidMoney > 1000)
+                {
+                    user.UserLevel = new SilverUser(user);
+                }
+            }
+        }
+        #endregion
+        #region 状态模式B
+        //自己跟着模仿的一个例子，没有遵守隔离原则，在子类的单个方法中写入了两个功能
+        //用来解决多分支的情况，无需写一大堆的if elseif
+        //把每一个分支写成一个一个类
+        //定义一个接口，接口中定义一个Handle方法，实际操作放入Handle方法中，让每个分支类去继承
+        //定义一个StateContext类，用来给入条件，根据条件调用子类
+        interface IStateHandler { void Handle(StateContext ctx); }
+        class StateContext
+        {
+            private string UserName; //用户名称
+            public StateContext(string _UserName)
+            {
+                UserName = _UserName;
+            }
+            public double TotalMoney = 0; //单个用户的总消费的钱
+            public double Money;   //本次消费的钱
+            public string UserLevel;
+            public IStateHandler stateHandler = new Init(); //接口初始化
+            public void GetLevelAndDis(double money)
+            {
+                //初始化当前消费
+                Money = money;
+                //初始化为查询类，通过查询类创建正确的实例类再进行正确的方法调用
+                stateHandler = new Init();
+                stateHandler.Handle(this);
+                stateHandler.Handle(this);
+
+                //输出用户名和曾消费过的金额和当前物品价格
+                MessageBox.Show("宁好：" + UserName + "\r\n宁在本店总共消费了" + TotalMoney + "\r\n当前物品的价格：" + money);
+                //调用接口的Handle方法
+                //第一个参数：this，指向当前调用的类
+                //stateHandler.Handle(this);
+                //取得当前会员等级
+                //每次消费完后将消费金额加入总消费金额
+                TotalMoney += Money;
+                //弹出消息提示
+                MessageBox.Show("当前的会员等级：" + UserLevel + "\r\n打折后需要支付的钱：" + Money.ToString());
+            }
+        }
+        //初始化类，默认调用该类
+        class Init : IStateHandler
+        {
+            public void Handle(StateContext ctx)
+            {
+                if (ctx.TotalMoney < 1000)
+                {
+                    ctx.stateHandler = new NoUser();
+                }
+                else if (ctx.TotalMoney >= 1000 && ctx.TotalMoney < 2000)
+                {
+                    ctx.stateHandler = new SeUser();
+                }
+                else if (ctx.TotalMoney >= 2000 && ctx.TotalMoney < 3000)
+                {
+                    ctx.stateHandler = new GdUser();
+                }
+                else if (ctx.TotalMoney >= 3000)
+                {
+                    ctx.stateHandler = new DmUser();
+                }
+            }
+        }
+        #region 子类 -- 会员
+        //钻石会员
+        class DmUser : IStateHandler
+        {
+            public void Handle(StateContext ctx)
+            {
+                if (ctx.TotalMoney < 4500)
+                {
+                    ctx.Money = ctx.Money * 0.75;
+                    ctx.UserLevel = "一级钻石会员";
+                }
+                if (ctx.TotalMoney >= 4500 && ctx.TotalMoney < 6000)
+                {
+                    ctx.Money = ctx.Money * 0.7;
+                    ctx.UserLevel = "二级钻石会员";
+                }
+                if (ctx.TotalMoney >= 6000)
+                {
+                    ctx.Money = ctx.Money * 0.6;
+                    ctx.UserLevel = "至尊钻石会员";
+                }
+            }
+        }
+        //黄金会员
+        class GdUser : IStateHandler
+        {
+            public void Handle(StateContext ctx)
+            {
+                if (ctx.TotalMoney < 2500)
+                {
+                    ctx.Money = ctx.Money * 0.88;
+                    ctx.UserLevel = "初级黄金会员";
+                }
+                if (ctx.TotalMoney > 2500 && ctx.TotalMoney < 3000)
+                {
+                    ctx.Money = ctx.Money * 0.85;
+                    ctx.UserLevel = "高级黄金会员";
+                }
+            }
+        }
+        //白银会员
+        class SeUser : IStateHandler
+        {
+            public void Handle(StateContext ctx)
+            {
+                if (ctx.TotalMoney < 1500)
+                {
+                    ctx.Money = ctx.Money * 0.98;
+                    ctx.UserLevel = "初级白银会员";
+                }
+                if (ctx.TotalMoney > 1500 && ctx.TotalMoney < 2000)
+                {
+                    ctx.Money = ctx.Money * 0.95;
+                    ctx.UserLevel = "高级白银会员";
+                }
+            }
+        }
+        //普通会员
+        class NoUser : IStateHandler
+        {
+            public void Handle(StateContext ctx)
+            {
+                ctx.UserLevel = "普通会员";
+            }
+        }
+        #endregion
         #endregion
 
         #region 单例模式
@@ -1745,6 +2145,7 @@ namespace test
         {
             private OnlyYou() { }
             private static OnlyYou obj = null;
+            public string a;
             static OnlyYou()  //创建的静态构造方法，该构造方法只会被创建一次，所以可以用来做单例模式
             {
                 obj = new OnlyYou();
@@ -1754,21 +2155,112 @@ namespace test
                 return obj;
             }
         }
+        //例如：以下代码要放入方法或事件中执行
+        //var you = OnlyYou.GetOnlyYou();
+        //var you2 = OnlyYou.GetOnlyYou();
+        //you.a = "123";
+        //    you2.a = "456";
+        //    MessageBox.Show(you.a);  //输出456，因为实例化被覆盖掉了，虽然看上去定义了两个，其实调用的都是一个实例
         #endregion
 
+        #region 策略模式
+        //策略模式只用于单层接口，例如在此处运算符接口算一层，使用计算器类去调用运算符接口，外部只需要调用Calculator类中的方法同时实例化一个运算符类就可以使用
+        //多层：假如使用计算器类实现算一层，那么另外创建一个计算机类去调用运算符接口，代码基本与计算器类相同，这时可以再抽象出一层，这种方式请使用桥接模式
+        public interface ICalc
+        {
+            int Calculate(int x, int y);
+        }
+        class CalculateSum : ICalc
+        {
+            public int Calculate(int num1, int num2)
+            {
+                return num1 + num2;
+            }
+        }
+        class CalculateSub : ICalc
+        {
+            public int Calculate(int num1, int num2)
+            {
+                return num1 - num2;
+            }
+        }
+        class CalculateMul : ICalc
+        {
+            public int Calculate(int num1, int num2)
+            {
+                return num1 * num2;
+            }
+        }
+        class CalculateDiv : ICalc
+        {
+            public int Calculate(int num1, int num2)
+            {
+                return num1 / num2;
+            }
+        }
+        class CalculateReMain : ICalc
+        {
+            public int Calculate(int num1, int num2)
+            {
+                return num1 % num2;
+            }
+        }
+        public void GetCalc(int x, int y, ICalc calc) //封装成方法，使用时只需要实例化类
+        {
+            var Calc = new Calculator(calc);
+            string a = Calc.Calculate(x, y).ToString();
+            MessageBox.Show(a);
+        }
+        class Calculator //主方法类
+        {
+            //在此调用实现了接口的类中的方法，而且该类已经实现了封装，无需再修改任何东西
+            //如果还要添加运算符，直接写类然后继承ICalc接口就可以了，调用时去实例化需要使用的运算符类就vans了
+            private ICalc calc;
+            public Calculator(ICalc _calc)
+            {
+                calc = _calc;
+            }
+            public int Calculate(int x, int y)
+            {
+                return calc.Calculate(x, y);
+            }
+        }
+        #endregion
+
+        #region 工厂模式
+        //实现了简单工厂和工厂方法还有抽象工厂
+        //放在test项目下的Factory文件夹中
+        //使用时using该文件夹下的任意具体类库文件夹
+
+        //抽象工厂
+        //高度抽象化
+        //创建抽象的基类，一个用来保存抽象父类字段的抽象类（AbstractFactory）和一个抽象父类（ShuiGuo）
+        //抽象父类（ShuiGuo）中定义方法，用来让子类继承重写
+        //抽象类（AbstractFactory）中定义一个方法用来让工厂类继承重写去实例化具体子类
+        //创建具体子类（Apple）继承于（ShuiGuo）与其工厂类（AppleFactory）继承于（Abstractory）
+        //创建一个用来实例化子类、处理逻辑、调用方法的类（Client）
+        #endregion
         private void btn1_Click(object sender, EventArgs e)
         {
-            int _a = 1;
-            int _b = 2;
-            int abc(int a,int b)
-            {
-                return a + b;
-            }
-            abc(_a, _b);
+            
+
             #region 设计模式
             #region 状态模式实现
-
-
+            //A
+            //var user = new User("天天");
+            //user.BuyBook(1000);
+            //user.BuyBook(1000);
+            //user.BuyBook(1000);
+            //B
+            //var user = new StateContext("天天");
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
+            //user.GetLevelAndDis(1000);
             #endregion
 
             #region 桥接模式实现
@@ -1820,9 +2312,32 @@ namespace test
             //getXml.Get();
             #endregion
 
+            #region 策略模式实现
+            // GetCalc(1, 2, new CalculateSum()); //以封装成方法
             #endregion
 
-            //frm2.ShowDialog();  //和Show()方法不同的时使用该方法启动后，除非关闭Form2，否则无法将焦点给到Form1中
+            #region 工厂模式实现
+            ////工厂方法1
+            //IFactoryA[] factories = new IFactoryA[2];
+            //factories[0] = new CreateProductFactoryA();
+            //factories[1] = new CreateProductFactoryB();
+            //foreach (var item in factories)
+            //{
+            //    Product product = item.CreateProduct();
+            //    MessageBox.Show(product.GetType().Name);
+            //}
+            ////工厂方法2
+            //IFactory factory = new UndergraduateFactory();
+            //LeiFeng leiFeng = factory.CreateLeiFeng();
+            //leiFeng.BuyRice();
+
+            ////抽象工厂
+            //AbstractFactory factory = new OrangeFactory();  //指定要实例显示的是哪个工厂
+            //Client c1 = new Client(factory);   //工厂带入到创建实例类中
+            //c1.Run();                          //执行方法
+            #endregion
+
+            #endregion
 
             #region 关于C#
 
@@ -1837,12 +2352,17 @@ namespace test
 
             #region 多线程与同步
             ////创建线程关键字 Task
-            //var task = new Task(() => txt1.Text+="创建了一个线程");     //这就是一个线程
+            ////这样使用是线程不安全的，创建的线程和要执行结果的线程不是同一个线程
+            //var task = new Task(() => txt1.Text += "创建了一个线程");     //这就是一个线程
             //task.Start();   //线程要使用Start()方法来启动
             //task.Wait();    //wait方法表示线程运行结束后等待一会
 
-            ////另一种创建方式
-            //var task2 = Task.Factory.StartNew(() => "1");   
+            ////另一种创建方式，使用该方法创建的线程是线程安全的
+            //var task2 = Task.Factory.StartNew(() => MessageBox.Show("1"));
+            //task2.Start();
+            ////可以使用.Result获取返回值
+            //var task2Result = Task.Factory.StartNew(() => "2").Result;  //输出1
+            //MessageBox.Show(task2Result);
             #region 多线程并行运算处理
             //txt1.Text += "-----------\r\n";
             //void Calc(Action action)     //封装的方法，用来统计处理所用的时间
@@ -1850,33 +2370,33 @@ namespace test
             //    Stopwatch stopwatch = new Stopwatch();
             //    stopwatch.Start();
             //    //list.ForEach(i => i++);
-            //    action();
+            //    action();   //运行的委托方法
             //    stopwatch.Stop();
-            //    txt1.Text += stopwatch.ElapsedMilliseconds + "\r\n";
+            //    txt1.Text += stopwatch.ElapsedMilliseconds + "\r\n";   //将用的时间输出
             //}
-            //void Do(ref int i)
+            //void Do(ref int i)  //计算i值的正弦值
             //{
             //    i = (int)Math.Abs(Math.Sin(i));
             //}
-            //var list = new List<int>();
-            //int num = 5000000;
-            //for (int i = 1; i <= num; i++)
+            //var list = new List<int>();  //创建一个用来保存 i 值的list
+            //int num = 5000000;   //初始化运行次数
+            //for (int i = 1; i <= num; i++)  //循环将 i 添加进list
             //{
             //    list.Add(i);
             //}
 
-            //Calc(() => list.ForEach(i => Do(ref i)));
+            //Calc(() => list.ForEach(i => Do(ref i)));  //使用ForEach运行500万次
 
-            //Calc(() => list.AsParallel().ForAll(i => Do(ref i)));
+            //Calc(() => list.AsParallel().ForAll(i => Do(ref i)));   //使用AsParallel运行
 
-            //Calc(() => Parallel.ForEach(list, i => Do(ref i)));
+            //Calc(() => Parallel.ForEach(list, i => Do(ref i)));    //使用Parallel运行
 
             ////for的写法，目测是最快的
-            ////Stopwatch sw2 = new Stopwatch();
-            ////sw2.Start();
-            ////Parallel.For(0, 5000000, i => i++);
-            ////sw2.Stop();
-            ////txt1.Text += sw2.ElapsedMilliseconds + "\r\n";
+            //Stopwatch sw2 = new Stopwatch();
+            //sw2.Start();
+            //Parallel.For(0, 5000000, i => i++);
+            //sw2.Stop();
+            //txt1.Text += sw2.ElapsedMilliseconds + "\r\n";
             #endregion
 
             #region 多线程异常处理
@@ -1905,13 +2425,13 @@ namespace test
 
             //var syn = MyExMethods.syn;       //相同命名空间下，静态类中的静态属性无需实例化
             //int Count = 0;
-            //void Increment()
+            //void Increment()  //Count加500万次
             //{
             //    for (int i = 0; i < 50000000; i++)
             //    {
             //        //两种写法，这种为C#封装的写法，该类中还有其他原子操作方法，原子操作见同步最下方
             //        //第一种写法速度快于第二种
-            //        Interlocked.Increment(ref Count); 
+            //        Interlocked.Increment(ref Count);
             //        //lock (MyExMethods.syn)
             //        //{
             //        //    Count++;
@@ -1919,7 +2439,7 @@ namespace test
 
             //    }
             //}
-            //void Decrement()
+            //void Decrement() //Count减500万次
             //{
             //    for (int i = 0; i < 50000000; i++)
             //    {
@@ -1934,11 +2454,11 @@ namespace test
             //var task1 = new Task(() => Increment());  //创建一个线程，带入方法到委托
             //var task2 = new Task(Decrement);          //创建另一个线程，直接给方法名，系统自动识别
 
-            //task1.Start();
+            //task1.Start(); //执行线程
             //task2.Start();
-            //Task.WaitAll(task1, task2);
+            //Task.WaitAll(task1, task2);  //执行完进行等待
 
-            //txt1.Text += Count+"\r\n";
+            //txt1.Text += Count + "\r\n";
             ////如果不加Lock关键词和定义syn的情况
             ////执行完后会发现进行了五百万次加减操作后的Count并不为0，因为线程是交错进行的
             ////每一次++操作，分为四个步骤
@@ -1959,27 +2479,24 @@ namespace test
 
             #region 反射、特性、序列化、流的应用和动态编程
             #region 反射
-            ////var a = new A();            //反射应用,反射中有许多直接操作元数据的方法
-            ////var b = new B();
-            ////var type = a.GetType();     //第一步：使用GetType或者typeof获取到Class A的类型
+            //var a = new ReflectA();            //反射应用,反射中有许多直接操作元数据的方法
+            //var type = a.GetType();     //第一步：使用GetType或者typeof获取到Class A的类型
 
-            ////var property = type.GetProperty("MyProperty");    //获取属性，参数为属性名并创建一个值来保存获取到的属性
-            ////property.SetValue(a, "调用A类的属性");            //调用该属性的反射中才有的方法来对其操作，第一个参数为实例对象，第二个参数为要赋的值
-            ////txt1.Text = a.MyProperty;     //此时再调用该属性查看      输出值为：调用A类的属性
+            //var property = type.GetProperty("MyProperty");    //获取属性，参数为属性名并创建一个值来保存获取到的属性
+            //property.SetValue(a, "调用A类的属性");            //调用该属性的反射中才有的方法来对其操作，第一个参数为实例对象，第二个参数为要赋的值
+            //txt1.Text = a.MyProperty;     //此时再调用该属性查看      输出值为：调用A类的属性
 
             ////var function = type.GetMethod("Function");        //获取方法
-            ////function.Invoke(a, new object[] { "调用function方法"});   //Invoke表示调用该方法，第一个参数为需要调用方法的类，第二个参数为方法中的形参
-
+            ////function.Invoke(a, new object[] { "调用function方法" });   //Invoke表示调用该方法，第一个参数为需要调用方法的类，第二个参数为方法中的形参
+            ////如果要根据输入框的值来进行调用方法？
             ////定义一个值来接收输入框要调用的方法的名字
-
-            //////如果要根据输入框的值来进行调用方法？
-            ////var function2 = type.GetMethod(str.ToUpper());     //用反射轻松实现，直接根据输入值调用方法
-            ////function2.Invoke(a, null);        //直接调用，因为要调用的方法没有参数，所以直接给null
+            //string str = txt2.Text;           
+            //var function2 = type.GetMethod(str);     //用反射轻松实现，直接根据输入值调用方法
+            //function2.Invoke(a, new object[] { str });        //直接调用，因为要调用的方法没有参数，所以直接给null
 
             ////利用上面根据字符串实现方法，另一种使用，不直接实例化类，根据程序集名（也就是项目）去进行实例化类
             //var strA = txt1.Text;
             //var strA1 = txt2.Text;
-            //var a = new A();
             ////var type = a.GetType();
             //try
             //{
@@ -1987,7 +2504,7 @@ namespace test
             //    var Instance = Assembly.Load("test").CreateInstance("test." + strA);    //获取指定路径程序集中的类的实例
             //    var function = Instance.GetType().GetMethod(strA1);
             //    function.Invoke(Instance, null);
-            //    //分离写法
+            //    ////分离写法
             //    //Assembly assembly = Assembly.Load("test");        //获取程序集
             //    //Type type = assembly.GetType("test." + strA);     //指明路径获取class A的type
             //    //object functionDou = Activator.CreateInstance(type); //获取该class的实例
@@ -2001,19 +2518,23 @@ namespace test
             //}
             #endregion
             #region 特性
-            //使用自定义特性
-            //var A1 = new A() { Myproperty = "123"};
-            //string str = RequiredAttribute.IsPropertyRequired(A1) ? "已经赋值" : "未赋值"; 
+            ////用来加到class或者属性、方法的头上，可以用来检查其内容是否符合自己定义的格式
+            ////如何自定义特性：创建一个类继承Attribute
+            ////使用自定义特性
+            //var A1 = new A() { MyProperty = "123" };
+
+            //string str = RequiredAttribute.IsPropertyRequired(A1) ? "已经赋值" : "未赋值";
             //MessageBox.Show(str);
 
-            //if (RequiredAttribute.IsPropertyRequired(A1)) //if写法
-            //{
-            //    MessageBox.Show("已经赋值"); 
-            //}
-            //else
-            //{
-            //    MessageBox.Show("未赋值");
-            //}
+            ////if写法
+            ////if (RequiredAttribute.IsPropertyRequired(A1))
+            ////{
+            ////    MessageBox.Show("已经赋值");
+            ////}
+            ////else
+            ////{
+            ////    MessageBox.Show("未赋值");
+            ////}
             #endregion
             #region 序列化和反序列化
             ////第一步在需要序列化的实例给一个特性[Serializable]，表示可以序列化
@@ -2023,9 +2544,11 @@ namespace test
             ////在这个过程中可以实现很多能力，例如：传输到数据库，发送给别人
             //var a = new A();
             ////序列化
-            //using (var steam = File.Open(typeof(A).Name + ".bin", FileMode.Create))  //表示只在该范围中实现实例化
+            ////表示只在该范围中实现实例化
+            ////Open方法的两个参数：（第一个参数为文件名，第二个参数为指定文件的方式，是创建一个文件还是打开一个文件，此处为创建一个文件）
+            //using (var steam = File.Open(typeof(A).Name + ".bin", FileMode.Create))  
             //{
-            //    var bf = new BinaryFormatter();  
+            //    var bf = new BinaryFormatter();
             //    bf.Serialize(steam, a);        //该方法有两个参数，第一个为流，带入之前定义的文件流，可以带入多种流，第二个参数为要序列化的对象
             //}
 
@@ -2037,7 +2560,7 @@ namespace test
             //    after = (A)bf.Deserialize(steam);     //返回的是object，需要转换为原本的类型
             //}
             #endregion
-            ////动态编程
+            ////动态编程，C#中存在一个非常有趣的值，dynamic，可以给其赋任何类型的值，并且后续可以进行更改
             //dynamic a = 1;
             //a = "string";
             #endregion
@@ -2136,8 +2659,14 @@ namespace test
             //    {
             //        txt1.Text += "\t" + e2.Current + "\r\n";
             //    }
-            //}
+            //}          
             #endregion
+            ////实现IEnumerable接口的实例
+            //var carLot = new Garage();
+            //foreach (Car item in carLot)
+            //{
+            //    item.GetCar();
+            //}
             #endregion
 
             #region 订阅发布设计模式响应

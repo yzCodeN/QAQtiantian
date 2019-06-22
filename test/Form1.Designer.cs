@@ -68,7 +68,7 @@
             // 
             Tools.Name = "Tools";
             Tools.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            Tools.Size = new System.Drawing.Size(65, 21);
+            Tools.Size = new System.Drawing.Size(80, 24);
             Tools.Text = "帮助(&F1)";
             // 
             // groupBox1
@@ -76,19 +76,19 @@
             this.groupBox1.Controls.Add(this.treeView1);
             this.groupBox1.Controls.Add(this.txt2);
             this.groupBox1.Controls.Add(this.txt1);
-            this.groupBox1.Location = new System.Drawing.Point(34, 28);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Location = new System.Drawing.Point(45, 35);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.groupBox1.Size = new System.Drawing.Size(545, 289);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.groupBox1.Size = new System.Drawing.Size(727, 361);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "groupBox1";
             // 
             // treeView1
             // 
-            this.treeView1.Location = new System.Drawing.Point(275, 42);
-            this.treeView1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.treeView1.Location = new System.Drawing.Point(367, 52);
+            this.treeView1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.treeView1.Name = "treeView1";
             treeNode9.Name = "节点1";
             treeNode9.Text = "节点1";
@@ -109,43 +109,44 @@
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode13,
             treeNode16});
-            this.treeView1.Size = new System.Drawing.Size(147, 221);
+            this.treeView1.Size = new System.Drawing.Size(195, 275);
             this.treeView1.TabIndex = 6;
             // 
             // txt2
             // 
-            this.txt2.Location = new System.Drawing.Point(446, 57);
-            this.txt2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt2.Location = new System.Drawing.Point(595, 71);
+            this.txt2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txt2.Name = "txt2";
-            this.txt2.Size = new System.Drawing.Size(96, 21);
+            this.txt2.Size = new System.Drawing.Size(127, 25);
             this.txt2.TabIndex = 1;
             // 
             // txt1
             // 
-            this.txt1.Location = new System.Drawing.Point(16, 42);
-            this.txt1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt1.Location = new System.Drawing.Point(21, 52);
+            this.txt1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txt1.Multiline = true;
             this.txt1.Name = "txt1";
             this.txt1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txt1.Size = new System.Drawing.Size(248, 221);
+            this.txt1.Size = new System.Drawing.Size(329, 275);
             this.txt1.TabIndex = 0;
             // 
             // dgv1
             // 
             this.dgv1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgv1.Location = new System.Drawing.Point(616, 28);
-            this.dgv1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.dgv1.Location = new System.Drawing.Point(821, 35);
+            this.dgv1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.dgv1.Name = "dgv1";
+            this.dgv1.RowHeadersWidth = 51;
             this.dgv1.RowTemplate.Height = 27;
-            this.dgv1.Size = new System.Drawing.Size(56, 279);
+            this.dgv1.Size = new System.Drawing.Size(75, 349);
             this.dgv1.TabIndex = 2;
             // 
             // btn1
             // 
-            this.btn1.Location = new System.Drawing.Point(81, 344);
-            this.btn1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn1.Location = new System.Drawing.Point(108, 430);
+            this.btn1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn1.Name = "btn1";
-            this.btn1.Size = new System.Drawing.Size(56, 18);
+            this.btn1.Size = new System.Drawing.Size(75, 22);
             this.btn1.TabIndex = 3;
             this.btn1.Text = "button1";
             this.btn1.UseVisualStyleBackColor = true;
@@ -159,9 +160,9 @@
             this.toolStripLabel1,
             this.toolStripSeparator1,
             this.toolStripLabel2});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 412);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 521);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(706, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(941, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -189,10 +190,9 @@
             // lbl1
             // 
             this.lbl1.AutoSize = true;
-            this.lbl1.Location = new System.Drawing.Point(256, 350);
-            this.lbl1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lbl1.Location = new System.Drawing.Point(341, 438);
             this.lbl1.Name = "lbl1";
-            this.lbl1.Size = new System.Drawing.Size(41, 12);
+            this.lbl1.Size = new System.Drawing.Size(55, 15);
             this.lbl1.TabIndex = 5;
             this.lbl1.Text = "label1";
             // 
@@ -203,17 +203,17 @@
             Tools});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(706, 25);
+            this.menuStrip1.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
+            this.menuStrip1.Size = new System.Drawing.Size(941, 28);
             this.menuStrip1.TabIndex = 6;
             this.menuStrip1.Text = "menuStrip1";
             // 
             // Form1
             // 
             this.AcceptButton = this.btn1;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(706, 437);
+            this.ClientSize = new System.Drawing.Size(941, 546);
             this.Controls.Add(this.lbl1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -221,7 +221,7 @@
             this.Controls.Add(this.dgv1);
             this.Controls.Add(this.groupBox1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";

@@ -53,6 +53,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -64,9 +65,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Factory\AbstractFactory\AbstractFactory.cs" />
+    <Compile Include="Factory\AbstractFactory\Apple.cs" />
+    <Compile Include="Factory\AbstractFactory\AppleFactory.cs" />
+    <Compile Include="Factory\AbstractFactory\Client.cs" />
+    <Compile Include="Factory\AbstractFactory\Orange.cs" />
+    <Compile Include="Factory\AbstractFactory\OrangeFactory.cs" />
+    <Compile Include="Factory\AbstractFactory\ShuiGuo.cs" />
+    <Compile Include="Factory\FactoryMethodB\CreateProductA.cs" />
+    <Compile Include="Factory\FactoryMethodB\CreateProductB.cs" />
+    <Compile Include="Factory\FactoryMethodB\CreateProductFactoryA.cs" />
+    <Compile Include="Factory\FactoryMethodB\CreateProductFactoryB.cs" />
+    <Compile Include="Factory\FactoryMethodB\IFactoryA.cs" />
+    <Compile Include="Factory\FactoryMethodB\Product.cs" />
+    <Compile Include="Factory\FactoryMethodA\IFactory.cs" />
+    <Compile Include="Factory\FactoryMethodA\LeiFeng.cs" />
+    <Compile Include="Factory\FactoryMethodA\UnDergaduate.cs" />
+    <Compile Include="Factory\FactoryMethodA\UndergraduateFactory.cs" />
+    <Compile Include="Factory\FactoryMethodA\Volunteer.cs" />
+    <Compile Include="Factory\FactoryMethodA\VolunteerFactory.cs" />
+    <Compile Include="Factory\StaticFactory\AnimalFactory.cs" />
+    <Compile Include="Factory\StaticFactory\Cat.cs" />
+    <Compile Include="Factory\StaticFactory\Dog.cs" />
+    <Compile Include="Factory\StaticFactory\Pig.cs" />
+    <Compile Include="Factory\StaticFactory\Animal.cs" />
+    <Compile Include="Form1.cs" />
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
@@ -129,5 +152,6 @@
       <Name>CallBackExampleTwo</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

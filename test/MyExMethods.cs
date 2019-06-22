@@ -64,5 +64,15 @@ namespace test
         }
 
         internal static readonly object syn = new object();
+        public static List<string> ToList(this Array a)
+        {
+            var list = new List<string>();
+            foreach (var item in a)
+            {
+                list.Add(item.ToString());
+            }
+            return list;
+        }
+
     }
 }

@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace test.Factory.StaticFactory
+{
+    class Dog : Animal
+    {
+        public override string GetAnimalType()
+        {
+            return "小狗汪汪";
+        }
+    }
+}
