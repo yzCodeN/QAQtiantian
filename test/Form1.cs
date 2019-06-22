@@ -2243,7 +2243,6 @@ namespace test
         private void btn1_Click(object sender, EventArgs e)
         {
             
-
             #region 设计模式
             #region 状态模式实现
             //A
